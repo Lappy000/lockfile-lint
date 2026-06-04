@@ -6,7 +6,7 @@ import re
 from dataclasses import dataclass
 from typing import Callable
 
-from lockfile_lint.scanner import PackageEntry, ParsedLockfile
+from lockfile_lint.scanner import ParsedLockfile
 
 # Known malicious packages and patterns (curated list)
 KNOWN_MALICIOUS: dict[str, set[str]] = {
@@ -148,14 +148,16 @@ class RuleEngine:
             if pkg.name in KNOWN_MALICIOUS:
                 bad_versions = KNOWN_MALICIOUS[pkg.name]
                 if "*" in bad_versions or pkg.version in bad_versions:
-                    findings.append(Finding(
-                        rule="malicious-package",
-                        severity="critical",
-                        message=f"known malicious package detected: {pkg.name}@{pkg.version}",
-                        package=pkg.name,
-                        version=pkg.version,
-                        details="this package/version is in the known-malicious database",
-                    ))
+                    findings.append(
+                        Finding(
+                            rule="malicious-package",
+                            severity="critical",
+                            message=f"known malicious package detected: {pkg.name}@{pkg.version}",
+                            package=pkg.name,
+                            version=pkg.version,
+                            details="this package/version is in the known-malicious database",
+                        )
+                    )
         return findings
 
     def _rule_untrusted_registry(self, lockfile: ParsedLockfile) -> list[Finding]:
@@ -164,35 +166,41 @@ class RuleEngine:
         for pkg in lockfile.packages:
             if pkg.registry and pkg.registry not in TRUSTED_REGISTRIES:
                 if not pkg.resolved.startswith("https://github.com"):
-                    findings.append(Finding(
-                        rule="untrusted-registry",
-                        severity="warning",
-                        message=f"resolved from untrusted registry: {pkg.registry}",
-                        package=pkg.name,
-                        version=pkg.version,
-                        details=pkg.resolved,
-                    ))
+                    findings.append(
+                        Finding(
+                            rule="untrusted-registry",
+                            severity="warning",
+                            message=f"resolved from untrusted registry: {pkg.registry}",
+                            package=pkg.name,
+                            version=pkg.version,
+                            details=pkg.resolved,
+                        )
+                    )
         return findings
 
     def _rule_missing_integrity(self, lockfile: ParsedLockfile) -> list[Finding]:
         """Detect packages without integrity hashes."""
         missing = [pkg for pkg in lockfile.packages if not pkg.integrity and pkg.resolved]
         if len(missing) > 10:
-            return [Finding(
-                rule="missing-integrity",
-                severity="warning",
-                message=f"{len(missing)} packages lack integrity hashes",
-                details="run `npm audit fix` or regenerate lockfile",
-            )]
+            return [
+                Finding(
+                    rule="missing-integrity",
+                    severity="warning",
+                    message=f"{len(missing)} packages lack integrity hashes",
+                    details="run `npm audit fix` or regenerate lockfile",
+                )
+            ]
         findings = []
         for pkg in missing:
-            findings.append(Finding(
-                rule="missing-integrity",
-                severity="warning",
-                message="missing integrity hash",
-                package=pkg.name,
-                version=pkg.version,
-            ))
+            findings.append(
+                Finding(
+                    rule="missing-integrity",
+                    severity="warning",
+                    message="missing integrity hash",
+                    package=pkg.name,
+                    version=pkg.version,
+                )
+            )
         return findings
 
     def _rule_suspicious_url(self, lockfile: ParsedLockfile) -> list[Finding]:
@@ -201,14 +209,16 @@ class RuleEngine:
         for pkg in lockfile.packages:
             for pattern in SUSPICIOUS_URL_PATTERNS:
                 if pattern.search(pkg.resolved):
-                    findings.append(Finding(
-                        rule="suspicious-url",
-                        severity="critical",
-                        message=f"suspicious resolved URL pattern",
-                        package=pkg.name,
-                        version=pkg.version,
-                        details=pkg.resolved,
-                    ))
+                    findings.append(
+                        Finding(
+                            rule="suspicious-url",
+                            severity="critical",
+                            message="suspicious resolved URL pattern",
+                            package=pkg.name,
+                            version=pkg.version,
+                            details=pkg.resolved,
+                        )
+                    )
                     break
         return findings
 
@@ -217,14 +227,16 @@ class RuleEngine:
         findings = []
         for pkg in lockfile.packages:
             if pkg.resolved.startswith("git://") or pkg.resolved.startswith("git+"):
-                findings.append(Finding(
-                    rule="git-dependency",
-                    severity="warning",
-                    message="git dependency — vulnerable to repo transfer attacks",
-                    package=pkg.name,
-                    version=pkg.version,
-                    details=pkg.resolved,
-                ))
+                findings.append(
+                    Finding(
+                        rule="git-dependency",
+                        severity="warning",
+                        message="git dependency — vulnerable to repo transfer attacks",
+                        package=pkg.name,
+                        version=pkg.version,
+                        details=pkg.resolved,
+                    )
+                )
         return findings
 
     def _rule_http_registry(self, lockfile: ParsedLockfile) -> list[Finding]:
@@ -232,14 +244,16 @@ class RuleEngine:
         findings = []
         for pkg in lockfile.packages:
             if pkg.resolved.startswith("http://"):
-                findings.append(Finding(
-                    rule="http-registry",
-                    severity="critical",
-                    message="resolved over plain HTTP — MITM risk",
-                    package=pkg.name,
-                    version=pkg.version,
-                    details=pkg.resolved,
-                ))
+                findings.append(
+                    Finding(
+                        rule="http-registry",
+                        severity="critical",
+                        message="resolved over plain HTTP — MITM risk",
+                        package=pkg.name,
+                        version=pkg.version,
+                        details=pkg.resolved,
+                    )
+                )
         return findings
 
     def _rule_mixed_registries(self, lockfile: ParsedLockfile) -> list[Finding]:
@@ -252,12 +266,14 @@ class RuleEngine:
         trusted_found = registries & TRUSTED_REGISTRIES
         untrusted_found = registries - TRUSTED_REGISTRIES
         if trusted_found and untrusted_found:
-            return [Finding(
-                rule="mixed-registries",
-                severity="info",
-                message=f"packages from {len(registries)} different registries",
-                details=f"registries: {', '.join(sorted(registries))}",
-            )]
+            return [
+                Finding(
+                    rule="mixed-registries",
+                    severity="info",
+                    message=f"packages from {len(registries)} different registries",
+                    details=f"registries: {', '.join(sorted(registries))}",
+                )
+            ]
         return []
 
     def _rule_empty_version(self, lockfile: ParsedLockfile) -> list[Finding]:
@@ -265,10 +281,12 @@ class RuleEngine:
         findings = []
         for pkg in lockfile.packages:
             if not pkg.version and pkg.name:
-                findings.append(Finding(
-                    rule="empty-version",
-                    severity="warning",
-                    message="package has no version pinned",
-                    package=pkg.name,
-                ))
+                findings.append(
+                    Finding(
+                        rule="empty-version",
+                        severity="warning",
+                        message="package has no version pinned",
+                        package=pkg.name,
+                    )
+                )
         return findings

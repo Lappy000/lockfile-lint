@@ -1,14 +1,15 @@
 """Configuration file support for lockfile-lint."""
+
 from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
 
 
 @dataclass
 class LintConfig:
     """Configuration loaded from .lockfile-lint.json or pyproject.toml."""
+
     rules: list[str] | None = None
     ignore_packages: set[str] = field(default_factory=set)
     strict: bool = False
