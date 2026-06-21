@@ -1,0 +1,27 @@
+"""Constants and configuration for core."""
+
+# Default scan parameters
+DEFAULT_TIMEOUT = 30
+DEFAULT_RETRY_COUNT = 3
+DEFAULT_BATCH_SIZE = 100
+MAX_CONCURRENT_TASKS = 50
+
+# Severity levels
+SEVERITY_CRITICAL = "critical"
+SEVERITY_HIGH = "high"
+SEVERITY_MEDIUM = "medium"
+SEVERITY_LOW = "low"
+SEVERITY_INFO = "info"
+
+# Port categories
+COMMON_PORTS = [21, 22, 23, 25, 53, 80, 110, 143, 443, 993, 995, 8080, 8443]
+WEB_PORTS = [80, 443, 8000, 8080, 8443, 8888]
+DB_PORTS = [1433, 1521, 3306, 5432, 6379, 9042, 27017]
+
+SEVERITY_WEIGHTS = {
+    SEVERITY_CRITICAL: 10.0,
+    SEVERITY_HIGH: 7.0,
+    SEVERITY_MEDIUM: 4.0,
+    SEVERITY_LOW: 1.5,
+    SEVERITY_INFO: 0.5,
+}
