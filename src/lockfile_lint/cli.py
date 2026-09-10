@@ -58,33 +58,48 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     all_findings: list[dict] = []
+    scanned_lockfiles: list[Path] = []
+    errors: list[dict] = []
     for lockfile in lockfiles:
         parsed = scanner.parse_lockfile(lockfile)
         if parsed is None:
+            errors.append({"path": str(lockfile), "message": "failed to parse lockfile"})
+            print(f"error: failed to parse lockfile: {lockfile}", file=sys.stderr)
             continue
         findings = engine.run(parsed)
         all_findings.extend(findings)
+        scanned_lockfiles.append(lockfile)
 
     if args.json_output:
-        print(json.dumps({"findings": all_findings, "scanned": len(lockfiles)}, indent=2))
+        print(
+            json.dumps(
+                {"findings": all_findings, "scanned": len(scanned_lockfiles), "errors": errors},
+                indent=2,
+            )
+        )
     else:
-        _print_findings(all_findings, lockfiles)
+        _print_findings(all_findings, scanned_lockfiles, incomplete=bool(errors))
 
     has_critical = any(f["severity"] == "critical" for f in all_findings)
     has_warning = any(f["severity"] == "warning" for f in all_findings)
 
     if has_critical:
         return 2
-    if has_warning and args.strict:
+    if errors or (has_warning and args.strict):
         return 1
     return 0
 
 
-def _print_findings(findings: list[dict], lockfiles: list[Path]) -> None:
+def _print_findings(
+    findings: list[dict], lockfiles: list[Path], *, incomplete: bool = False
+) -> None:
     print(f"scanned {len(lockfiles)} lockfile(s)\n")
 
+    if incomplete:
+        print("scan incomplete: one or more lockfiles could not be parsed\n")
     if not findings:
-        print("\033[32m✓ no issues found\033[0m")
+        if not incomplete:
+            print("\033[32m✓ no issues found\033[0m")
         return
 
     critical = [f for f in findings if f["severity"] == "critical"]

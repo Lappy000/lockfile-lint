@@ -54,8 +54,14 @@ lockfile-lint . --ignore-packages @company/internal-pkg
 | Code | Meaning |
 |------|---------|
 | 0 | Clean / warnings only (without `--strict`) |
-| 1 | Warnings found (with `--strict`) |
-| 2 | Critical issues found |
+| 1 | Scan error (invalid directory or unparseable lockfile), or warnings found with `--strict` |
+| 2 | Critical issues found (takes precedence over scan errors) |
+
+If a lockfile cannot be parsed, the scan continues for the other discovered
+lockfiles but does not report a clean result. A diagnostic names the failed
+lockfile on stderr. JSON reports include an `errors` array of `{path, message}`
+objects (empty for a successful scan); `scanned` counts only successfully parsed
+lockfiles.
 
 ## CI Integration
 

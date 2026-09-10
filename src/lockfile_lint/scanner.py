@@ -87,10 +87,12 @@ class Scanner:
                 entry.registry = self._extract_registry(entry.resolved)
             packages.append(entry)
 
-        # npm v1 fallback: "dependencies" key
+        # npm v1 fallback: nested "dependencies" trees, not just top-level entries
         if not packages:
             deps = data.get("dependencies", {})
-            for name, info in deps.items():
+            pending = list(reversed(deps.items()))
+            while pending:
+                name, info = pending.pop()
                 entry = PackageEntry(
                     name=name,
                     version=info.get("version", ""),
@@ -100,6 +102,7 @@ class Scanner:
                 if entry.resolved:
                     entry.registry = self._extract_registry(entry.resolved)
                 packages.append(entry)
+                pending.extend(reversed(info.get("dependencies", {}).items()))
 
         return ParsedLockfile(path=path, format="npm", packages=packages, raw=data)
 
