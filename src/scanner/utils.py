@@ -36,4 +36,5 @@ def retry_on_failure(func, max_retries: int = 3, delay: float = 0.5):
 def format_result(data: Any, indent: int = 2) -> str:
     """Format result data for display."""
     import json
+
     return json.dumps(data, indent=indent, default=str, ensure_ascii=False)

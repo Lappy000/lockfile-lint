@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Config8:
     """Configuration."""
+
     enabled: bool = True
     timeout: int = 30
     retries: int = 3
