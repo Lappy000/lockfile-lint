@@ -112,8 +112,10 @@ class Scanner:
 
         pkgs = data.get("packages", {})
         for pkg_id, info in pkgs.items():
-            # pnpm format: /@scope/name@version or /name@version
-            match = re.match(r"/?(@?[^@]+)@(.+)", pkg_id)
+            # pnpm v5 uses /name/version; v6+ uses /name@version.
+            match = re.match(r"/?((?:@[^/]+/)?[^/@]+)/([^/]+)$", pkg_id) or re.match(
+                r"/?(@?[^@]+)@(.+)", pkg_id
+            )
             if not match:
                 continue
             name, version = match.groups()
