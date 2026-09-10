@@ -91,3 +91,18 @@ The scanner includes a curated database of known-malicious packages:
 ## License
 
 MIT
+
+## Development checks
+
+Install the same development tools used by CI:
+
+```bash
+pip install -e ".[dev]"
+pytest tests/ -v
+ruff check src/
+ruff format --check src/
+```
+
+The development extra pins Ruff so local and CI checks use the same rules and
+formatting. Upgrade the pin deliberately and validate the full source tree;
+an unpinned linter release must not silently change the project's check policy.

@@ -24,6 +24,12 @@ dependencies = [
     "pyyaml>=6.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff==0.15.18",
+]
+
 [project.scripts]
 lockfile-lint = "lockfile_lint.cli:main"
 
